@@ -1,0 +1,28 @@
+<figure class="imageblock widthContent"><span><img height="434" src="https://blog.kakaocdn.net/dn/Ruw3T/btsOzlUTlYJ/WyuXLodQkoNQ9H8N1ZzT40/img.png" width="1286" /></span></figure>
+<p>EduMate 서비스에는 이메일 인증 프로세스가 존재한다. 인증 코드 생성의 보안성을 높이기 위해 고민하던 중, 여러 가지 방법들에 대해서 알게 되었고 특히, Math.Random 메서드 그리고 Random과 SecureRandom 클래스의 차이에 대해 알게 되었다. <br />먼저 난수가 무엇인지부터 차근차근 살펴보자.</p><h2>난수</h2><blockquote>난수란, 예측 불가능성을 만족하기 위해 무작위하게 생성되는 값을 말한다.</blockquote><h3>난수의 성질</h3><h4><span style="color: #333333;">무작위성 (Randomness)</span></h4><p>통계적인 성질을 조사했을 때, 치움침이 없을 경우 무작위하다고 판단한다. 이때, 주의해야할 것이 '무작위하다'와 '예측할 수 없다'는 동일하지 않다는 것이다. 무작위하기 때문에 예측할 수 없다는 것은 불충분 조건이다. 때문에 무작위성만 가지는 난수를 약한 의사난수(Pseudo Random)이라고 한다.&nbsp;</p><h4 style="text-align: left;"><span style="color: #333333;">재현 불가능성 (Reconstruction is impossible)</span></h4><p style="text-align: left;">재현 불가능성을 가지는 난수를 진성 난수(True Random)이라고 한다. 가장 이상적인 난수이다.</p><h4><span style="color: #333333;">예측 불가능성 (Unpredictability)</span></h4><figure class="imageblock floatLeft"><span><img height="318" src="https://blog.kakaocdn.net/dn/pulL7/btsOyox8Ov8/iysnhlNiJjUjkkvEdQ1ezK/img.png" width="245" /></span></figure>
+<p>&nbsp;<br />공격자가 모든 의사난수를 얻는다고 해도 다음에 출력될 난수를 예측할 수 없어야 한다. 의사난수를 생성하기 위한 초기값이 되는 값(seed)는 절대 알려져서는 안된다.<br />&nbsp;<br />Seed란, 난수 생성기의 내부 상태를 초기화하는 데 사용되는 값이며, 일반적으로 무작위한 비트열이다.보안이 중요한 상황에서는 이 시드 값이 외부에 노출되지 않고, 예측 불가능해야 하며, 충분히 랜덤한 비밀 값이어야 한다.</p><h2>&nbsp;</h2><h2>난수를 생성하는 방법</h2><p>Java에서 난수를 생성하는 방법은 여러가지가 있지만, 해당 포스트에서는 크게 3가지에 대해서 다뤄보고자 한다.</p><h3>Math.random</h3><p>먼저, java.lang.Math 클래스의 random 메서드를 사용하는 방법이 있다. 해당 메서드는 객체 생성 없이 바로 사용할 수 있는 정적 메서드로 반환값은 0.0보다 크거나 같고 1.0보다 작은 double형 값이다.</p><pre class="java"><code>double randomValue = Math.random();</code></pre><p>현재 시간을 시드(Seed) 값으로 사용하기 때문에 매 실행마다 다른 난수가 반환된다.</p><h3>Random</h3><p>두번째로, java.util 패키지의 Random 클래스를 사용하는 방법이다. 앞서 살펴본 Math.random과 다르게 인스턴스를 생성해서 사용해야 한다. 객체 생성 방법은 크게 2가지로, 인자 없이 기본 생성자를 사용하는 방법과 long 타입의 시드(seed)를 인자로 받는 생성자를 사용하는 방법이 있다. 시드 값을 명시하지 않으면, 내부적으로 시스템의 현재 시간(밀리초 단위)을 기반으로 시드가 자동 설정된다.</p><pre class="java"><code>// 기본 생성자로 생성
+Random random = new Random();
+
+// Seed를 지정해서 생성
+Random randomWithSeed = new Random(5);</code></pre><p>후자의 방식을 사용하면 항상 같은 시드를 사용하기 때문에 동일한 난수 시퀀스를 얻을 수 있어 재현 가능한 결과를 만들 수 있다.</p><h3>SecureRandom</h3><p>SecureRandom 클래스는 생성된 난수를 추측할 수 없도록(예측 불가능성) 보안적으로 더 강력한 처리가 필요할 경우 고려해볼 수 있다. 아래와 같이 정수형, 실수형 등의 기본형 타입에 대해서 난수를 생성할 수 있다.</p><pre class="java"><code>SecureRandom secureRandom = new SecureRandom();
+
+int randomInt = secureRandom.nextInt();
+long randomLong = secureRandom.nextLong();
+double randomDouble = secureRandom.nextDouble();</code></pre><p>Random 클래스는 시스템 시간을 기반으로 시드를 생성하기 때문에 공격자가 시드의 생성된 시간을 알면 쉽게 재현할 수 있다는 보안 취약성이 존재한다. 하지만, SecureRandom은 OS의 무작위 데이터를 가져와서 이를 시드 값으로 사용한다. 또한 48비트를 갖는 Random 클래스와 다르게 SecureRandom 클래스는 최대 128비트를 포함할 수 있기 때문에 반복될 확률도 적다.</p><h4>thread-safe</h4><p>공식 문서에 따르면, SecureRandom 클래스는 thread-safe하다.</p><blockquote>"Instances of SecureRandom are safe for use by multiple concurrent threads."<br /><a href="https://docs.oracle.com/en/java/javase/17/docs/api/java.base/java/security/SecureRandom.html" target="_blank"><span>Java SE API 문서</span></a></blockquote><p>SecureRandom 구현체는 내부적으로 synchronized 또는 락(lock) 기반 매커니즘으로 동기화를 한다. 그리고 SecureRandom 내부에 있는 SPI 구현체 (SecureRandomSpi)가 동기화를 책임진다.</p><figure class="imagegridblock">
+  <div class="image-container"><span style="width: 48.3869%;"><img alt="" height="828" src="https://blog.kakaocdn.net/dn/bglGkz/btsOyns5iKX/ATnZTZFUZqKIHVpgd8Vikk/img.png" width="1264" /></span><span style="width: 50.4503%;"><img alt="" height="480" src="https://blog.kakaocdn.net/dn/bzGjEE/btsOyGMGiTe/egfxd9UZUPmMbdhNWiBvz0/img.png" width="764" /></span></div>
+</figure>
+<p>내부 코드를 살펴보면, 메서드들이 위와 같이 구현되어 있는 것을 확인할 수 있다. threadSafe 변수는 말 그대로 해당 구현체가 thread-safe한지를 나타내는 boolean 값이며, 이 값이 false인 경우 SecureRandom이 synchronized(this) 블록을 통해 직접 동기화를 수행한다. 즉, 구현체가 thread-safe하다면 락 없이 호출하고, 그렇지 않더라도 SecureRandom이 자체적으로 동기화를 처리하여, <b>항상 thread-safe하게 동작하도록 보장</b>한다.</p><hr /><h2>그래서 인증 코드를 어떤 방식으로 생성하죠?  </h2><p>기본적으로 우리가 Random함수를 사용하는 목적은 난수를 생성하기 위해서이다.&nbsp;<br />Random 클래스와 random 함수의 경우에는, 시드값을 상대적으로 쉽게 유추할 수 있기 때문에 암호학적으로는 약한 의사 난수를 생성한다고 볼 수 있다. 때문에 해당 방법들을 인증 과정에서 사용되는 코드를 만들기 위해 사용하게 된다면 적합하지 않을 것이다.&nbsp;<br />&nbsp;<br />사용자를 인증하는 곳에서 사용되는 코드(난수)는 보안적으로 중요한 값이라고 생각하였고, 때문에 현 프로젝트에서는 아래와 같이 SecureRandom 클래스를 사용하여 인증 코드를 생성하기로 결정하였다.</p><pre class="java"><code>public class RandomCodeGenerator {
+
+&nbsp;&nbsp;&nbsp;&nbsp;private static final SecureRandom RANDOM = new SecureRandom();
+&nbsp;&nbsp;&nbsp;&nbsp;private static final String CHARACTERS = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+&nbsp;&nbsp;&nbsp;&nbsp;private static final int CODE_LENGTH = 6;
+
+&nbsp;&nbsp;&nbsp;&nbsp;public String generate() {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;StringBuilder builder = new StringBuilder(CODE_LENGTH);
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;for (int i = 0; i &lt; CODE_LENGTH; i++) {
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;int index = RANDOM.nextInt(CHARACTERS.length());
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;builder.append(CHARACTERS.charAt(index));
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;}
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;return builder.toString();
+&nbsp;&nbsp;&nbsp;&nbsp;}
+}</code></pre><p>SecureRandom 클래스는 앞서 설명했듯이 thread-safe하기 때문에, 인스턴스를 여러 스레드에서 안전하게 공유할 수 있다. 따라서 객체 생성 비용을 줄이기 위해, 해당 인스턴스를 상수(static final)로 미리 생성해두고 캐싱함으로써 재사용할 수 있도록 구현했다.<br />&nbsp;<br />&nbsp;</p>
